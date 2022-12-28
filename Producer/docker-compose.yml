@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper-1
+    restart: always
+    networks:
+      - app-cluster
+    environment:
+      ZOOKEEPER_MY_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "22181:2181"
+    volumes:
+      - ./kafka/zookeeper-1/data:/data
+      - ./kafka/zookeeper-1/datalog:/datalog
+#  zookeeper-2:
+#    image: confluentinc/cp-zookeeper:latest
+#    container_name: zookeeper-2
+#    restart: always
+#    networks:
+#      - app-cluster
+#    environment:
+#      ZOO_MY_ID: 2
+#      ZOO_TICK_TIME: 2000
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 2000
+#    ports:
+#      - "32181:2181"
+#    volumes:
+#      - ./kafka/zookeeper-2/data:/data
+#      - ./kafka/zookeeper-2/datalog:/datalog
+
+  kafka-1:
+    container_name: kafka-1
+    image: confluentinc/cp-kafka:latest
+    networks:
+      - app-cluster
+    depends_on:
+      - zookeeper-1
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL_SAME_HOST://:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9092,EXTERNAL_SAME_HOST://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: ./kafka/logs
+    ports:
+      - "19092:19092"
+    volumes:
+      - ./kafka/broker1/kafka-logs:/kafka
+      - ./kafka/broker1/logs:/logs
+      - ./kafka/broker1/data:/data
+  kafka-2:
+    container_name: kafka-2
+    image: confluentinc/cp-kafka:latest
+    networks:
+      - app-cluster
+    depends_on:
+      - zookeeper-1
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL_SAME_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:9092,EXTERNAL_SAME_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: ./kafka/logs
+    ports:
+      - "29092:29092"
+    volumes:
+      - ./kafka/broker2/kafka-logs:/kafka
+      - ./kafka/broker2/logs:/logs
+      - ./kafka/broker2/data:/data
+  kafka-3:
+    container_name: kafka-3
+    image: confluentinc/cp-kafka:latest
+    networks:
+      - app-cluster
+    depends_on:
+      - zookeeper-1
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL_SAME_HOST://:39092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:9092,EXTERNAL_SAME_HOST://localhost:39092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: ./kafka/logs
+    ports:
+      - "39092:39092"
+    volumes:
+      - ./kafka/broker3/kafka-logs:/kafka
+      - ./kafka/broker3/logs:/logs
+      - ./kafka/broker3/data:/data
+networks:
+  app-cluster:
+    driver: bridge
